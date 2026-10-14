@@ -1,0 +1,21 @@
+microservice:
+  name: chatapp-socket
+  namespace: chatapp
+
+workload:
+  image: satdevpurpose/chat-socket:latest
+  resources:
+    min:
+      memory: 100Mi
+      cpu: 100m
+  port: 5002
+
+env:
+  CLIENT_URL: chatapp-nginx
+  REDIS_URL: redis://chatapp-redis
+
+secrets:
+  DATABASE_URL: "postgresql://sathish:sathish77@chatapp-postgres/chat?schema=public"
+  JWT_SECRET: "sathish77"
+  MAIL_USERNAME: your_gmail
+  MAIL_PASSWORD: your_gmail_password

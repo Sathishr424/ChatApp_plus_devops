@@ -1,0 +1,4 @@
+apiVersion: v1
+name: chatapp-postgres
+description: A Helm chart for deploying chatapp postgres
+version: 1.0.0

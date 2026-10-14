@@ -1,0 +1,20 @@
+services:
+  client:
+    build: "./client/"
+    image: ${DOCKER_USERNAME}/chat-client:latest
+
+  backend:
+    build:
+      context: "./backend"
+      dockerfile: Dockerfile.backend
+    image: ${DOCKER_USERNAME}/chat-backend:latest
+
+  socket:
+    build:
+      context: "./backend"
+      dockerfile: Dockerfile.socket
+    image: ${DOCKER_USERNAME}/chat-socket:latest
+
+  storage:
+    build: "./storage/"
+    image: ${DOCKER_USERNAME}/chat-storage:latest

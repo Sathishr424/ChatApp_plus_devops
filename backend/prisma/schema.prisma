@@ -1,0 +1,204 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+generator client {
+  provider = "prisma-client"
+  output   = "../shared/generated/connection"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model users {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  fullname     String?
+  username     String?
+  password     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+  lastSeen     DateTime @default(now())
+  refreshToken String?
+
+  avatar_id String? @unique
+  avatar    file?   @relation(fields: [avatar_id], references: [id])
+
+  groups groupMember[]
+
+  sentConversations     conversation[] @relation("SentConversations")
+  receivedConversations conversation[] @relation("ReceivedConversations")
+
+  notSeenMessagesSent     not_seen_message[] @relation("sent")
+  notSeenMessagesReceived not_seen_message[] @relation("received")
+
+  notSeenGroupMessages not_seen_group_message[]
+  groupConversations   groupConversation[]
+  groupMessageSeens    group_message_seen[]
+}
+
+model not_seen_message {
+  id         Int @id @default(autoincrement())
+  from_id    Int
+  to_id      Int
+  count      Int @default(0)
+  message_id Int
+
+  from    users         @relation("sent", fields: [from_id], references: [id])
+  to      users         @relation("received", fields: [to_id], references: [id])
+  message conversation? @relation(fields: [message_id], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([from_id, to_id])
+}
+
+model not_seen_group_message {
+  id         Int @id @default(autoincrement())
+  group_id   Int
+  to_id      Int
+  count      Int @default(0)
+  message_id Int
+
+  group group @relation(fields: [group_id], references: [id])
+  to    users @relation(fields: [to_id], references: [id])
+
+  message groupConversation? @relation(fields: [message_id], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([group_id, to_id])
+}
+
+model group_message_seen {
+  id         Int @id @default(autoincrement())
+  message_id Int
+  group_id   Int
+  user_id    Int
+
+  message groupConversation? @relation(fields: [message_id], references: [id])
+  user    users              @relation(fields: [user_id], references: [id])
+  group   group              @relation(fields: [group_id], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([message_id, group_id, user_id])
+}
+
+model group {
+  id            Int                 @id @default(autoincrement())
+  name          String
+  members       groupMember[]
+  groupMessages groupConversation[]
+  members_count Int
+
+  avatar_id String? @unique
+  avatar    file?   @relation(fields: [avatar_id], references: [id])
+
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @default(now()) @updatedAt
+  notSeenGroupMessages not_seen_group_message[]
+  groupMessageSeens    group_message_seen[]
+}
+
+model groupMember {
+  id        Int     @id @default(autoincrement())
+  group_id  Int
+  member_id Int
+  admin     Boolean @default(false)
+
+  group  group @relation(fields: [group_id], references: [id])
+  member users @relation(fields: [member_id], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([group_id, member_id])
+}
+
+model groupConversation {
+  id       Int     @id @default(autoincrement())
+  message  String
+  deleted  Boolean @default(false)
+  edited   Boolean @default(false)
+  reply_id Int?
+
+  gif  String  @default("")
+
+  from_id  Int
+  group_id Int
+
+  from  users @relation(fields: [from_id], references: [id])
+  group group @relation(fields: [group_id], references: [id])
+
+  reply   groupConversation?  @relation("ConversationReplies", fields: [reply_id], references: [id])
+  replies groupConversation[] @relation("ConversationReplies")
+
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @default(now()) @updatedAt
+  notSeenGroupMessages not_seen_group_message[]
+  groupMessageSeens    group_message_seen[]
+  files                GroupConversationFile[]
+}
+
+model conversation {
+  id       Int     @id @default(autoincrement())
+  message  String
+  seen     Boolean @default(false)
+  deleted  Boolean @default(false)
+  edited   Boolean @default(false)
+  reply_id Int?
+
+  gif  String  @default("")
+
+  from_id Int
+  to_id   Int
+
+  from users @relation("SentConversations", fields: [from_id], references: [id])
+  to   users @relation("ReceivedConversations", fields: [to_id], references: [id])
+
+  reply   conversation?  @relation("ConversationReplies", fields: [reply_id], references: [id])
+  replies conversation[] @relation("ConversationReplies")
+
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @default(now()) @updatedAt
+  notSeenMessages not_seen_message[]
+  files           ConversationFile[]
+}
+
+model ConversationFile {
+  id         Int    @id @default(autoincrement())
+  message_id Int
+  file_id    String @unique
+
+  message conversation @relation(fields: [message_id], references: [id])
+  file    file         @relation(fields: [file_id], references: [id])
+}
+
+model GroupConversationFile {
+  id         Int    @id @default(autoincrement())
+  message_id Int
+  file_id    String @unique
+
+  message groupConversation @relation(fields: [message_id], references: [id])
+  file    file              @relation(fields: [file_id], references: [id])
+}
+
+model file {
+  id           String   @id @default(uuid())
+  originalName String
+  storedName   String
+  size         Int
+  mimeType     String
+  createdAt    DateTime @default(now())
+
+  conversationFile      ConversationFile?
+  groupConversationFile GroupConversationFile?
+  users                 users?
+  group                 group?
+}

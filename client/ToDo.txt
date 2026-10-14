@@ -1,0 +1,30 @@
+1. Add auto scroll on new messages only when the scrollbar already at the bottom. (done)
+1. If not in the bottom show a small notification on how many new messages arrived (done)
+1. Show online or offline (done)
+1. Reply to a message feature (done)
+1. Sidebar typing and new messages popup on the user card (done)
+1. Message delete feature (done)
+1. Lazy loading the conversations (done)
+1. Message search feature and it should also support lazy loading (done)
+1. Message Edit feature (Done)
+
+1. Group (creation, deletion, messages)
+  1. Delete Group (For now do not have a delete option for group)
+  1. Edit Group (Done)
+
+1. File sharing (done)
+1. File sharing if the file is image have a preview feature (done)
+
+1. Modern styling (done)
+1. Refactor the User Interface code (done)
+
+1. If there's any new message comes from the socket server, and if that user is not loaded on the sidebar then fetch that user/group and add it to the position based on the last_updated updated time, if the user present reallocated that user position (done)
+
+Not priority
+1. Once you finish the above add a search bar on the top and let user search a user and chat instead of showing all the users on the site. (done)
+1. Have a profile edit option where user can change profile picture and additionally have a full name. (done)
+
+Optional.
+1. React to a message
+1. Let user have a option to toggle show online status
+1. Email notification on new message

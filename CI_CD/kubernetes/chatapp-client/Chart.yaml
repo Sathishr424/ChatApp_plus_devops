@@ -1,0 +1,4 @@
+apiVersion: v1
+name: chatapp-client
+description: A Helm chart for deploying chatapp client
+version: 1.0.0

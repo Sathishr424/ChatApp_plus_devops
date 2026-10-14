@@ -1,0 +1,75 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.microservice.name }}
+  namespace: {{ .Values.microservice.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Values.microservice.name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name:  {{ .Values.microservice.namespace }}
+        app.kubernetes.io/component: database
+        app.kubernetes.io/instance: {{ .Values.microservice.name }}
+    spec:
+      containers:
+      - name: {{ .Values.microservice.name }}
+        image: {{ .Values.workload.image }}
+        envFrom:
+          - configMapRef:
+              name: {{ .Values.microservice.name }}-config
+          - secretRef:
+              name: {{ .Values.microservice.name }}-secrets
+        resources:
+          requests:
+            cpu: {{ .Values.workload.resources.min.cpu }}
+            memory: {{ .Values.workload.resources.min.memory }}
+        ports:
+        - containerPort: {{ .Values.workload.port }}
+        readinessProbe:
+          exec:
+            command:
+              - pg_isready
+              - -U
+              - postgres
+              - -d
+              - chatapp
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+        livenessProbe:
+          exec:
+            command:
+              - pg_isready
+              - -U
+              - postgres
+              - -d
+              - chatapp
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        startupProbe:
+          exec:
+            command:
+              - pg_isready
+              - -U
+              - postgres
+              - -d
+              - chatapp
+          periodSeconds: 5
+          failureThreshold: 12
+          timeoutSeconds: 3
+
+        volumeMounts:
+          - mountPath: /var/lib/postgresql
+            name: postgres-data
+      volumes:
+        - name: postgres-data
+          emptyDir: {}

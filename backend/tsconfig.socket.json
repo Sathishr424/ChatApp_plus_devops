@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./socket-dist"
+  },
+  "include": ["socket/src", "shared"]
+}

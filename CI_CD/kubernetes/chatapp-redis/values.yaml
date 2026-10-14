@@ -1,0 +1,11 @@
+microservice:
+  name: chatapp-redis
+  namespace: chatapp
+
+workload:
+  image: redis
+  resources:
+    min:
+      memory: 100Mi
+      cpu: 100m
+  port: 6379

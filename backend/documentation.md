@@ -1,0 +1,2 @@
+# How we are handling how many messages the opposite person not seen from your messages?
+Currently we created a new table called not_seen_message, where whenever user send a message to another user, we simply update the table data where from_id (user who sent), to_id (user who receive the message) and update count to count + 1 and message_id will point to the sent message. This way when we query the users we simply populate the field notSeenMessagesSent with where clause of the user (user_id should be to_id on not_seen_message table) that initiated that API call.

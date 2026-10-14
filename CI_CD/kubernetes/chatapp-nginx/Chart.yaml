@@ -1,0 +1,4 @@
+apiVersion: v1
+name: chatapp-nginx
+description: A Helm chart for deploying chatapp nginx
+version: 1.0.0

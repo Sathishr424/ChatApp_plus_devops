@@ -1,0 +1,7 @@
+resource "null_resource" "post_provision" {
+  depends_on = [aws_instance.machine01-instance]
+
+  provisioner "local-exec" {
+    command = "bash ./scripts/post.sh ${aws_instance.machine01-instance.public_ip}"
+  }
+}

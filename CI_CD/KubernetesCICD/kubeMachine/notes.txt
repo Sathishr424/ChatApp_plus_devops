@@ -1,0 +1,46 @@
+kubectl get pods,services,deployments -n vprofile
+
+kubectl apply -R -f .
+
+kubectl delete deployments,services --all -n vprofile
+
+kubectl get statefulsets.apps,pods,services,deployments -n vprofile
+
+kubectl get all -n vprofile
+
+kubectl delete all --all -n vprofile
+
+kubectl get all,pvc,ingress -n vprofile
+kubectl get all,mongodbcommunity,pvc,pv,ingress,secrets,configMaps -n mongodb
+
+kubectl delete all,pvc,pv,ingress,secrets,configMaps --all -n vprofile
+kubectl delete all,mongodbcommunity,pvc,pv,ingress,secrets,configMaps --all -n mongodb
+
+kubectl config set-context --current --namespace=my-app
+
+kubectl top pods -n vprofile
+
+kubectl get all,pvc,pv,ingress,secrets,configMaps -n ingress-nginx
+kubectl delete all,pvc,pv,ingress,secrets,configMaps --all -n ingress-nginx
+
+## Download and apply ingress
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/cloud/deploy.yaml
+
+## Add helm repo
+helm repo add mongodb https://mongodb.github.io/helm-charts
+
+# Install commands
+helm upgrade --install vprofile-mysql ./vprofile-mysql -n vprofile
+helm uninstall vprofile-mysql -n vprofile
+
+helm upgrade --install vprofile-tomcat ./vprofile-tomcat -n vprofile
+helm uninstall vprofile-tomcat -n vprofile
+
+helm upgrade --install vprofile-nginx ./vprofile-nginx -n vprofile
+helm uninstall vprofile-nginx -n vprofile
+
+kubectl get svc ingress-nginx-controller -n ingress-nginx   -o jsonpath='{.spec.externalTrafficPolicy}{"\n"}'
+
+kubectl patch svc ingress-nginx-controller \
+  -n ingress-nginx \
+  -p '{"spec":{"externalTrafficPolicy":"Cluster"}}' 

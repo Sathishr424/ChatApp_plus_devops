@@ -1,0 +1,4 @@
+apiVersion: v1
+name: chatapp-backend
+description: A Helm chart for deploying chatapp backend
+version: 1.0.0

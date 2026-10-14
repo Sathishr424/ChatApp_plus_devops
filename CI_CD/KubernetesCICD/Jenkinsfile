@@ -1,0 +1,118 @@
+pipeline {
+  // Here if have a agent node define here if not and you want to run the pipline on the jenkins machine itself comment this agent block
+  agent {
+    label "ubuntu01"
+  }
+
+  parameters {
+    string(
+        name: 'MACHINE_IP',
+        defaultValue: '',
+        description: 'IPv4 address of the deployment machine, and make sure that you configured the private key in jenkins under the name "ssh_chatapp_deploy_machine" and type "ssh username with private key"'
+    )
+    string(
+        name: 'MACHINE_USERNAME',
+        defaultValue: 'ubuntu',
+        description: 'SSH username for the production machine'
+    )
+  }
+
+  stages {
+    stage('Fetch code') {
+      steps {
+        git(
+            branch: 'master',
+            credentialsId: 'github_username_token',
+            url: 'https://github.com/Sathishr424/ChatApplication.git'
+        )
+      }
+    }
+
+    stage('Build') {
+      steps {
+        withCredentials([
+          usernamePassword(
+              credentialsId: 'docker_secret',
+              usernameVariable: 'DOCKER_USERNAME',
+              passwordVariable: 'DOCKER_TOKEN'
+          )
+        ]) {
+            sh 'echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin'
+            sh 'docker compose -f compose-production-build.yaml build'
+          }
+      }
+    }
+
+    stage('Publish') {
+      steps {
+      withCredentials([
+          usernamePassword(
+              credentialsId: 'docker_secret',
+              usernameVariable: 'DOCKER_USERNAME',
+              passwordVariable: 'DOCKER_TOKEN'
+          )
+        ]) {
+          sh 'docker compose -f compose-production-build.yaml push'
+        }
+      }
+    }
+
+    stage("Package Helm charts") {
+      steps {
+        sh '''
+          chmod +x CI_CD/kubernetes/package.sh
+          ./CI_CD/kubernetes/package.sh
+        '''
+      }
+    }
+
+    stage("Publish Helm charts") {
+      steps {
+        withCredentials([
+          usernamePassword(
+              credentialsId: 'docker_secret',
+              usernameVariable: 'DOCKER_USERNAME',
+              passwordVariable: 'DOCKER_TOKEN'
+          )
+        ]) {
+            sh '''
+              set -e
+
+              echo "$DOCKER_TOKEN" | helm registry login registry-1.docker.io \
+                  -u "$DOCKER_USERNAME" \
+                  --password-stdin
+
+              chmod +x CI_CD/kubernetes/registry_push.sh
+              ./CI_CD/kubernetes/registry_push.sh "$DOCKER_USERNAME"
+            '''
+          }
+      }
+    }
+
+    stage('Deploy') {
+      steps {
+      withCredentials([
+          usernamePassword(
+              credentialsId: 'docker_secret',
+              usernameVariable: 'DOCKER_USERNAME',
+              passwordVariable: 'DOCKER_TOKEN'
+          )
+        ]) {
+            sshagent(['ssh_chatapp_deploy_machine']) {
+                sh '''
+                  scp -o StrictHostKeyChecking=no \
+                      -o UserKnownHostsFile=/dev/null \
+                    CI_CD/KubernetesCICD/deploy.sh \
+                      $MACHINE_USERNAME@$MACHINE_IP:/home/$MACHINE_USERNAME/
+
+                  ssh -o StrictHostKeyChecking=no \
+                      -o UserKnownHostsFile=/dev/null \
+                      $MACHINE_USERNAME@$MACHINE_IP \
+                      "chmod +x ~/deploy.sh && ~/deploy.sh $DOCKER_USERNAME"
+                '''
+            }
+          }
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+To test/development locally you need to run postgres, redis and nginx services using provided docker compose file.
+
+And whichever service you want to develop or test you can run them locally via "npm run dev" inside those services folder like backend, client, storage
+
+There are 4 services that are developed by me:
+1. Client -> React + TailwindCSS + Vite frontend
+2. Backend (Node server) => Typescript + Express
+3. Backend (Socket server) => Typescript + Socket.io
+4. Storage server => Javascript + Express + Multan
+
+Refer the .env.example in the services folder all the needed environment variables
+
+Others are just docker images with some configuration:
+5. Redis -> For socket broadcast this will be usefull if you plan to scale the socket server horizontally
+6. Postgred -> Database
+7. Nginx -> This is what connects all the services and acts as a load balancer of sort

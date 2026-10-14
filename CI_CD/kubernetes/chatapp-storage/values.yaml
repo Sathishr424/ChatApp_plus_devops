@@ -1,0 +1,14 @@
+microservice:
+  name: chatapp-storage
+  namespace: chatapp
+
+workload:
+  image: satdevpurpose/chat-storage:latest
+  resources:
+    min:
+      memory: 100Mi
+      cpu: 100m
+  port: 5123
+
+env:
+  CLIENT_URL: chatapp-nginx
